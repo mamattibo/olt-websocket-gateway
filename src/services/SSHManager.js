@@ -41,11 +41,17 @@ class SSHManager extends BaseService {
     isReady() {
         return this.state === STATE.READY;
     }
+    isConnected() {
+        return (
+            this.state === STATE.CONNECTED ||
+            this.state === STATE.READY
+        );
+    }
 
     async start() {
         await super.start();
         logger.info('Starting SSH Manager...');
-        this.connect();
+        await this.connect();
     }
 
     async stop() {
@@ -54,9 +60,9 @@ class SSHManager extends BaseService {
             clearTimeout(this.reconnectTimer);
             this.reconnectTimer = null;
         }
-        if (this.stream) {
-            this.stream.destroy();
-            this.stream = null;
+        if (this.shell) {
+            this.shell.destroy();
+            this.shell = null;
         }
         if (this.client) {
             this.client.end();
@@ -118,29 +124,44 @@ class SSHManager extends BaseService {
                 });
 
                 this.shell.on('close',()=>{
-                    this.log.warn(
+                    logger.warn(
                         "SSH Shell Closed"
                     );
+                });
+
+                this.shell.on("error", (err) => {
+                    logger.error(err.message);
                 });
                 resolve();
             });
         });
     }
-    disconnect(){
-
-        if(this.client){
-
-            this.client.end();
-
+    disconnect() {
+        if (this.shell) {
+            this.shell.destroy();
+            this.shell = null;
         }
 
+        if (this.client) {
+            this.client.end();
+            this.client = null;
+        }
+
+        this.buffer = "";
+        this.currentCommand = null;
+        this.prompt = null;
     }
     registerClientEvents() {
-        this.client.on('ready', () => {
+        this.client.on('ready', async () => {
             this.setState(STATE.CONNECTED);
             logger.info('SSH Connected');
-            this.openShell();
-
+            try {
+                await this.openShell();
+                logger.info("Interactive shell opened");
+            } catch (err) {
+                logger.error(err.message);
+                this.disconnect();
+            }
         });
 
         this.client.on('error', (err) => {
@@ -150,7 +171,7 @@ class SSHManager extends BaseService {
         this.client.on('close', () => {
             logger.warn('SSH Connection Closed');
             this.setState(STATE.DISCONNECTED);
-            this.stream = null;
+            this.shell = null;
             this.client = null;
         });
 
@@ -161,17 +182,21 @@ class SSHManager extends BaseService {
     }
 
     handleData(chunk) {
-        this.buffer += chunk;
+        const text = chunk.toString();
+        this.buffer += text;
+
         if (!this.prompt) {
             const match = this.buffer.match(/([A-Za-z0-9_-]+)(?:\([^)]+\))?#\s*$/m);
             if (match) {
                 this.prompt = match[1];
-                this.log.info(
+                logger.info(
                     `Prompt detected : ${this.prompt}`
                 );
+                this.setState(STATE.READY);
             }
         }
         if (!this.currentCommand)
+            return;
         if (this.isPrompt()) {
             const response = this.buffer;
             clearTimeout(this.currentCommand.timeout);
@@ -191,23 +216,26 @@ class SSHManager extends BaseService {
         return regex.test(this.buffer);
     }
     sendCommand(command, timeout = 10000) {
-        if (!this.shell)
+        if (!this.isReady)
             throw new Error("SSH Shell not ready");
+        if (!this.shell)
+            throw new Error("Shell not available"); 
         if (this.currentCommand)
             throw new Error("Another command is still running");
         return new Promise((resolve, reject) => {
             this.buffer = "";
             this.currentCommand = {
+                command,
                 resolve,
                 reject,
                 timeout: setTimeout(() => {
+                    this.buffer = "";
                     this.currentCommand = null;
-                    reject(
-                        new Error("Command timeout")
-                    );
-                }, timeout)
+                    reject(new Error("Command timeout"));
+                }, timeout),
+                startTime: Date.now()
             };
-            this.log.debug(
+            logger.debug(
                 `SEND > ${command}`
             );
             this.shell.write(command + "\n");
