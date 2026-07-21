@@ -1,17 +1,9 @@
 const { Client } = require('ssh2');
-
+const STATE = require('../constants/SSHState');
 const BaseService = require('./BaseService');
 const config = require('../config');
 const logger = require('../logger');
-
-const STATE = Object.freeze({
-    STOPPED: 'STOPPED',
-    CONNECTING: 'CONNECTING',
-    CONNECTED: 'CONNECTED',
-    READY: 'READY',
-    DISCONNECTED: 'DISCONNECTED',
-    RECONNECTING: 'RECONNECTING'
-});
+const commandTimeout = config.commandTimeout;
 
 class SSHManager extends BaseService {
     constructor() {
@@ -26,10 +18,12 @@ class SSHManager extends BaseService {
     }
 
     setState(state) {
+        if (!Object.values(STATE).includes(state)) {
+            throw new Error(`Invalid SSH state: ${state}`);
+        }
         if (this.state === state) {
             return;
         }
-
         this.state = state;
         logger.info(`SSH State : ${state}`);
     }
@@ -215,8 +209,8 @@ class SSHManager extends BaseService {
         );
         return regex.test(this.buffer);
     }
-    sendCommand(command, timeout = 10000) {
-        if (!this.isReady)
+    sendCommand(command, timeout = commandTimeout) {
+        if (!this.isReady())
             throw new Error("SSH Shell not ready");
         if (!this.shell)
             throw new Error("Shell not available"); 

@@ -1,0 +1,8 @@
+module.exports = Object.freeze({
+    STOPPED: 'STOPPED',
+    CONNECTING: 'CONNECTING',
+    CONNECTED: 'CONNECTED',
+    READY: 'READY',
+    DISCONNECTED: 'DISCONNECTED',
+    RECONNECTING: 'RECONNECTING'
+});
