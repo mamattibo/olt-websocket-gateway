@@ -1,26 +1,34 @@
 const config = require('./config');
 const logger = require('./logger');
+const ServiceManager = require('./services/ServiceManager');
+const ConfigValidator = require('./configValidator');
 
 class App {
 
-    start() {
+    constructor() {
+
+        this.services = new ServiceManager();
+
+    }
+
+    async start() {
 
         logger.info('==========================================');
         logger.info(config.app.name);
         logger.info('Environment : ' + config.app.env);
-        logger.info('Application Started');
+        logger.info('Checking Configuration...');
+        ConfigValidator.validate(config);
+        logger.info('Configuration OK');
+        await this.services.startAll();
+        logger.info('Application Ready');
         logger.info('==========================================');
 
-        process.on('SIGINT', () => {
-
+        process.on('SIGINT', async () => {
             logger.info('Stopping Application...');
-
+            await this.services.stopAll();
             process.exit(0);
-
         });
-
     }
-
 }
 
 module.exports = App;

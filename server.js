@@ -2,6 +2,10 @@ require('dotenv').config();
 
 const App = require('./src/app');
 
-const app = new App();
+(async () => {
 
-app.start();
+    const app = new App();
+
+    await app.start();
+
+})();
