@@ -2,13 +2,16 @@ const config = require('./config');
 const logger = require('./logger');
 const ServiceManager = require('./services/ServiceManager');
 const ConfigValidator = require('./configValidator');
+const SSHManager = require('./services/SSHManager');
 
 class App {
 
     constructor() {
-
         this.services = new ServiceManager();
-
+        this.services.register(
+            'ssh',
+            new SSHManager()
+        );
     }
 
     async start() {
