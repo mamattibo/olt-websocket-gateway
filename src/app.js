@@ -8,9 +8,14 @@ class App {
 
     constructor() {
         this.services = new ServiceManager();
+        const ssh = new SSHManager();
         this.services.register(
             'ssh',
-            new SSHManager()
+            ssh
+        );
+        this.services.register(
+            'queue',
+            new CommandQueue(ssh)
         );
     }
 

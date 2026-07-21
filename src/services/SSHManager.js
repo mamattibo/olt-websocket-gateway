@@ -3,7 +3,7 @@ const STATE = require('../constants/SSHState');
 const BaseService = require('./BaseService');
 const config = require('../config');
 const logger = require('../logger');
-const commandTimeout = config.commandTimeout;
+const commandTimeout = config.command.timeout;
 
 class SSHManager extends BaseService {
     constructor() {

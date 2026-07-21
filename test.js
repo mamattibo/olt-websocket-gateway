@@ -1,5 +1,4 @@
 require('dotenv').config();
-console.log(process.env.SSH_USERNAME);
 const SSHManager = require('./src/services/SSHManager');
 
 (async () => {
