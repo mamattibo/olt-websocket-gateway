@@ -14,8 +14,8 @@ class App {
             ssh
         );
         this.services.register(
-            'queue',
-            new CommandQueue(ssh)
+            'command',
+            new CommandService(ssh)
         );
     }
 
