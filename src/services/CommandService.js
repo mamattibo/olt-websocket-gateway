@@ -1,8 +1,9 @@
 const BaseService = require('./BaseService');
 const CommandQueue = require('./CommandQueue');
+const BaseCommand = require('../commands/BaseCommand');
 const logger = require('../logger');
 
-const ShowCardCommand = require('../commands/ShowCardCommand');
+const Commands = require('../commands');
 
 class CommandService extends BaseService {
 
@@ -12,13 +13,16 @@ class CommandService extends BaseService {
         this.queue = new CommandQueue(sshManager);
         this.commands = new Map();
 
-        this.register(
-            'showCard',
-            new ShowCardCommand(this.queue)
-        );
+        for (const [name, CommandClass] of Object.entries(Commands)) {
+            const command = new CommandClass(this.queue);
+            this.register(name, command);
+        }
     }
 
     register(name, command) {
+        if (!(command instanceof BaseCommand)) {
+            throw new Error(`Invalid command: ${name}`);
+        }
 
         if (this.commands.has(name)) {
             throw new Error(`Command already registered : ${name}`);
