@@ -1,23 +1,25 @@
 const BaseService = require('./BaseService');
-const CommandQueue = require('./CommandQueue');
 const BaseCommand = require('../commands/BaseCommand');
 const logger = require('../logger');
-
 const Commands = require('../commands');
 
 class CommandService extends BaseService {
 
-    constructor(sshManager) {
+    constructor(queue) {
         super('CommandService');
-
-        this.queue = new CommandQueue(sshManager);
+        this.queue = queue;
         this.commands = new Map();
-
         for (const [name, CommandClass] of Object.entries(Commands)) {
-            const command = new CommandClass(this.queue);
-            this.register(name, command);
+            const command = new CommandClass(
+                this.queue
+            );
+            this.register(
+                name,
+                command
+            );
         }
     }
+
 
     register(name, command) {
         if (!(command instanceof BaseCommand)) {

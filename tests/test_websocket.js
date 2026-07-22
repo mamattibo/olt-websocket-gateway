@@ -8,8 +8,4 @@ const WebSocketService = require('../src/services/WebSocketService');
 
     console.log('WebSocket running...');
 
-    setTimeout(() => {
-        service.stop();
-    }, 5000);
-
 })();
