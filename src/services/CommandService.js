@@ -38,31 +38,34 @@ class CommandService extends BaseService {
         return this.commands.get(name);
     }
 
-    async execute(name, params = {}) {
-
+    async execute(name, ...args) {
         const command = this.commands.get(name);
-
         if (!command) {
             throw new Error(`Unknown command : ${name}`);
         }
-
         logger.debug(`Execute Command : ${name}`);
-
-        return await command.execute(params);
-
+        return await command.execute(...args);
     }
 
     list() {
-        return [...this.commands.keys()];
+        return Array.from(
+            this.commands.keys()
+        );
     }
 
     async start() {
         await super.start();
-        logger.info('Starting Command Service...');
+        logger.info(
+            "Starting Command Service..."
+        );
+        await this.queue.start();
     }
 
     async stop() {
-        logger.info('Stopping Command Service...');
+        logger.info(
+            "Stopping Command Service..."
+        );
+        await this.queue.stop();
         await super.stop();
     }
 

@@ -4,16 +4,19 @@ class BaseCommand {
         this.queue = queue;
     }
 
-    getName() {
-        return this.constructor.name;
-    }
-
-    async execute(params = {}) {
-        throw new Error('execute() must be implemented');
+    command() {
+        throw new Error("command() not implemented");
     }
 
     parse(raw) {
         return raw;
+    }
+
+    async execute(...args) {
+        const raw = await this.queue.execute(
+            this.command(...args)
+        );
+        return this.parse(raw);
     }
 
 }

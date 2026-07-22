@@ -1,5 +1,8 @@
-require('dotenv').config();
-const SSHManager = require('./src/services/SSHManager');
+const path = require('path');
+require('dotenv').config({
+    path: path.join(__dirname, '..', '.env')
+});
+const SSHManager = require('../src/services/SSHManager');
 
 (async () => {
     const ssh = new SSHManager();

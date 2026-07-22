@@ -1,7 +1,5 @@
 class Config {
-
     constructor() {
-
         this.app = {
             name: process.env.APP_NAME || 'OLT WebSocket Gateway',
             env: process.env.APP_ENV || 'development'
