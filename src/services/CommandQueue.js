@@ -50,8 +50,11 @@ class CommandQueue extends BaseService {
                 logger.debug(
                     `Execute : ${item.command}`
                 );
-                const result =
-                    await this.ssh.sendCommand(item.command);
+                const raw = await this.ssh.sendCommand(item.command);
+                const result = this.cleanResponse(
+                    item.command,
+                    raw
+                );
                 item.resolve(result);
                 logger.debug(
                     `Done : ${item.command}`
@@ -64,6 +67,22 @@ class CommandQueue extends BaseService {
             }
         }
         this.processing = false;
+    }
+
+    cleanResponse(command, response) {
+        let lines = response
+            .replace(/\r/g, '')
+            .split('\n');
+        // hapus echo command
+        if (lines.length && lines[0].trim() === command) {
+            lines.shift();
+        }
+        // hapus prompt terakhir
+        if (lines.length &&
+            /^.+(?:\([^)]+\))?#\s*$/.test(lines[lines.length - 1])) {
+            lines.pop();
+        }
+        return lines.join('\n').trim();
     }
 
     isProcessing() {
