@@ -41,12 +41,13 @@ class ShowCardCommand extends BaseCommand {
                 port: Number(col[5]),
                 hardVer: col[6],
                 softVer: col[7],
-
                 status: col.slice(8).join(' ')
             });
 
         }
-        return result;
+        return {
+            cards: result
+        };
     }
 
 }
