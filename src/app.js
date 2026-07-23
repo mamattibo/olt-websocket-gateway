@@ -7,6 +7,7 @@ const CommandQueue = require('./services/CommandQueue');
 const CommandService = require('./services/CommandService');
 const RequestDispatcher = require('./dispatcher/RequestDispatcher');
 const WebSocketService = require('./services/WebSocketService');
+const RequestValidator = require('./protocol/RequestValidator');
 
 class App {
 
@@ -21,9 +22,18 @@ class App {
             queue
         );
 
-        const dispatcher = new RequestDispatcher(
-            command
-        );
+        const validator =
+            new RequestValidator();
+
+        const dispatcher =
+            new RequestDispatcher(
+                command,
+                validator
+            );
+
+        //const dispatcher = new RequestDispatcher(
+        //    command
+        //);
 
         const websocket = new WebSocketService(
             dispatcher
