@@ -3,53 +3,60 @@ const PromptModes = require('../src/context/PromptModes');
 
 class MockQueue {
 
+    constructor() {
+        this.prompt = 'ZXAN#';
+    }
+
     async executeRaw(command) {
 
         switch (command) {
 
             case 'configure terminal':
-                return {
-                    response: '',
-                    prompt: 'ZXAN(config)#'
-                };
+                this.prompt = 'ZXAN(config)#';
+                break;
 
             case 'gpon':
-                return {
-                    response: '',
-                    prompt: 'ZXAN(config-gpon)#'
-                };
+                this.prompt = 'ZXAN(config-gpon)#';
+                break;
 
             case 'pon':
-                return {
-                    response: '',
-                    prompt: 'ZXAN(config-pon)#'
-                };
+                this.prompt = 'ZXAN(config-pon)#';
+                break;
 
             case 'interface gpon-olt_1/2/1':
-                return {
-                    response: '',
-                    prompt: 'ZXAN(config-if)#'
-                };
+                this.prompt = 'ZXAN(config-if)#';
+                break;
 
             case 'pon-onu-mng gpon-onu_1/2/1:1':
-                return {
-                    response: '',
-                    prompt: 'ZXAN(gpon-onu-mng 1/2/1:1)#'
-                };
+                this.prompt =
+                    'ZXAN(gpon-onu-mng 1/2/1:1)#';
+                break;
 
             case 'exit':
-                return {
-                    response: '',
-                    prompt: 'ZXAN(config)#'
-                };
 
-            default:
-                return {
-                    response: '',
-                    prompt: 'ZXAN#'
-                };
+                switch (this.prompt) {
+
+                    case 'ZXAN(config-gpon)#':
+                    case 'ZXAN(config-pon)#':
+                    case 'ZXAN(config-if)#':
+                    case 'ZXAN(gpon-onu-mng 1/2/1:1)#':
+                        this.prompt = 'ZXAN(config)#';
+                        break;
+
+                    case 'ZXAN(config)#':
+                        this.prompt = 'ZXAN#';
+                        break;
+
+                }
+
+                break;
 
         }
+
+        return {
+            response: '',
+            prompt: this.prompt
+        };
 
     }
 
@@ -60,18 +67,34 @@ const context = new CLIContext(
 );
 
 function test(name, fn) {
+
     try {
+
         fn();
-        console.log(`✓ ${name}`);
+
+        console.log(
+            `✓ ${name}`
+        );
+
     } catch (err) {
-        console.log(`✗ ${name}`);
+
+        console.log(
+            `✗ ${name}`
+        );
+
         console.error(err);
+
     }
+
 }
 
 (async () => {
 
     console.log('\n=== CLIContext Test ===\n');
+
+    //----------------------------------
+    // execute()
+    //----------------------------------
 
     await context.execute(
         'configure terminal'
@@ -79,10 +102,14 @@ function test(name, fn) {
 
     test('Enter CONFIG', () => {
 
-        const c = context.getCurrent();
-
-        if (c.mode !== PromptModes.CONFIG)
-            throw new Error('Invalid mode');
+        if (
+            context.getCurrent().mode !==
+            PromptModes.CONFIG
+        ) {
+            throw new Error(
+                'Invalid CONFIG'
+            );
+        }
 
     });
 
@@ -92,10 +119,14 @@ function test(name, fn) {
 
     test('Enter GPON', () => {
 
-        const c = context.getCurrent();
-
-        if (c.mode !== PromptModes.CONFIG_GPON)
-            throw new Error('Invalid mode');
+        if (
+            context.getCurrent().mode !==
+            PromptModes.CONFIG_GPON
+        ) {
+            throw new Error(
+                'Invalid GPON'
+            );
+        }
 
     });
 
@@ -105,10 +136,14 @@ function test(name, fn) {
 
     test('Enter Interface', () => {
 
-        const c = context.getCurrent();
-
-        if (c.mode !== PromptModes.CONFIG_IF)
-            throw new Error('Invalid mode');
+        if (
+            context.getCurrent().mode !==
+            PromptModes.CONFIG_IF
+        ) {
+            throw new Error(
+                'Invalid CONFIG_IF'
+            );
+        }
 
     });
 
@@ -120,24 +155,155 @@ function test(name, fn) {
 
         const c = context.getCurrent();
 
-        if (c.mode !== PromptModes.GPON_ONU_MNG)
-            throw new Error('Invalid mode');
+        if (
+            c.mode !==
+            PromptModes.GPON_ONU_MNG
+        ) {
+            throw new Error(
+                'Invalid ONU_MNG'
+            );
+        }
 
-        if (c.target !== '1/2/1:1')
-            throw new Error('Invalid target');
+        if (
+            c.target !== '1/2/1:1'
+        ) {
+            throw new Error(
+                'Invalid target'
+            );
+        }
+
+    });
+
+    //----------------------------------
+    // ensureConfig()
+    //----------------------------------
+
+    await context.ensureConfig();
+
+    test('Ensure Config from ONU', () => {
+
+        if (
+            context.getCurrent().mode !==
+            PromptModes.CONFIG
+        ) {
+            throw new Error(
+                'Should return CONFIG'
+            );
+        }
 
     });
 
     await context.execute(
-        'exit'
+        'gpon'
     );
 
-    test('Exit', () => {
+    await context.ensureConfig();
 
-        const c = context.getCurrent();
+    test('Ensure Config from GPON', () => {
 
-        if (c.mode !== PromptModes.CONFIG)
-            throw new Error('Invalid mode');
+        if (
+            context.getCurrent().mode !==
+            PromptModes.CONFIG
+        ) {
+            throw new Error(
+                'Should return CONFIG'
+            );
+        }
+
+    });
+
+    //----------------------------------
+    // enter()
+    //----------------------------------
+
+    await context.enter(
+        PromptModes.CONFIG_IF,
+        'gpon-olt_1/2/1'
+    );
+
+    test('Enter CONFIG_IF using enter()', () => {
+
+        if (
+            context.getCurrent().mode !==
+            PromptModes.CONFIG_IF
+        ) {
+            throw new Error(
+                'Invalid CONFIG_IF'
+            );
+        }
+
+    });
+
+    await context.ensureConfig();
+
+    await context.enter(
+        PromptModes.CONFIG_GPON
+    );
+
+    test('Enter GPON using enter()', () => {
+
+        if (
+            context.getCurrent().mode !==
+            PromptModes.CONFIG_GPON
+        ) {
+            throw new Error(
+                'Invalid CONFIG_GPON'
+            );
+        }
+
+    });
+
+    //----------------------------------
+    // invalid context
+    //----------------------------------
+
+    let ok = false;
+
+    try {
+
+        await context.enter(
+            'UNKNOWN_MODE'
+        );
+
+    } catch {
+
+        ok = true;
+
+    }
+
+    test('Unknown Context', () => {
+
+        if (!ok)
+            throw new Error(
+                'Should throw'
+            );
+
+    });
+
+    //----------------------------------
+    // EXEC not allowed
+    //----------------------------------
+
+    ok = false;
+
+    try {
+
+        await context.enter(
+            PromptModes.EXEC
+        );
+
+    } catch {
+
+        ok = true;
+
+    }
+
+    test('Cannot Enter EXEC', () => {
+
+        if (!ok)
+            throw new Error(
+                'Should throw'
+            );
 
     });
 

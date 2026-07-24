@@ -4,58 +4,32 @@ module.exports = Object.freeze({
 
     [PromptModes.EXEC]: {
         parent: null,
-        enter: null,
-        exit: null
+        command: null
     },
 
     [PromptModes.CONFIG]: {
         parent: PromptModes.EXEC,
-        enter: () => [
-            'configure terminal'
-        ],
-        exit: () => [
-            'exit'
-        ]
+        command: () => 'configure terminal'
     },
 
     [PromptModes.CONFIG_GPON]: {
         parent: PromptModes.CONFIG,
-        enter: () => [
-            'gpon'
-        ],
-        exit: () => [
-            'exit'
-        ]
+        command: () => 'gpon'
     },
 
     [PromptModes.CONFIG_PON]: {
         parent: PromptModes.CONFIG,
-        enter: () => [
-            'pon'
-        ],
-        exit: () => [
-            'exit'
-        ]
+        command: () => 'pon'
     },
 
     [PromptModes.CONFIG_IF]: {
         parent: PromptModes.CONFIG,
-        enter: (target) => [
-            `interface ${target}`
-        ],
-        exit: () => [
-            'exit'
-        ]
+        command: (target) => `interface ${target}`
     },
 
     [PromptModes.GPON_ONU_MNG]: {
         parent: PromptModes.CONFIG,
-        enter: (target) => [
-            `pon-onu-mng ${target}`
-        ],
-        exit: () => [
-            'exit'
-        ]
+        command: (target) => `pon-onu-mng ${target}`
     }
 
 });
