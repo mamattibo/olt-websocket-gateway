@@ -7,7 +7,7 @@ ws.on('open', () => {
     console.log('CONNECTED');
 
     ws.send(JSON.stringify({
-        type: 'abs',
+        type: 'request',
         id: '1',
         command: 'showCard',
         args: []

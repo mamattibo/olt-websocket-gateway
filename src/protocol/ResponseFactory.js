@@ -25,7 +25,7 @@ class ResponseFactory {
             type: 'error',
             id,
             code: ErrorCodes.INTERNAL_ERROR,
-            message: err.message || 'Internal error'
+            message: err?.message ?? 'Internal error'
         };
     }
 

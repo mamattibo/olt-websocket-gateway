@@ -209,6 +209,7 @@ class SSHManager extends BaseService {
         );
         return regex.test(this.buffer);
     }
+
     sendCommand(command, timeout = commandTimeout) {
         if (!this.isReady())
             throw new Error("SSH Shell not ready");

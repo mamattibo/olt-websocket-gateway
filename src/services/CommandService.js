@@ -2,6 +2,8 @@ const BaseService = require('./BaseService');
 const BaseCommand = require('../commands/BaseCommand');
 const logger = require('../logger');
 const Commands = require('../commands');
+const ProtocolError = require('../protocol/ProtocolError');
+const ErrorCodes = require('../protocol/ErrorCodes');
 
 class CommandService extends BaseService {
 
@@ -45,13 +47,20 @@ class CommandService extends BaseService {
     }
 
     async execute(name, ...args) {
-        const command = this.commands.get(name);
-        if (!command) {
-            throw new Error(`Unknown command : ${name}`);
-        }
-        logger.debug(`Execute Command : ${name}`);
-        return await command.execute(...args);
+
+    const command = this.commands.get(name);
+    if (!command) {
+        throw new ProtocolError(
+            ErrorCodes.COMMAND_UNKNOWN,
+            `Unknown command : ${name}`
+        );
     }
+
+    logger.debug(
+        `Execute Command : ${name}`
+    );
+    return await command.execute(...args);
+}
 
     list() {
         return Array.from(
